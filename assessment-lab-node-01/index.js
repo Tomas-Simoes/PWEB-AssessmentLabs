@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express()
-const port = 3000;
+const port = 3001;
 
 app.use(express.json());
 let minhas_notas = [20, 10, 15, 17];

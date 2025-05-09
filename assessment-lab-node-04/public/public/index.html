@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>ASLabNode8</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="">
+    </head>
+    <body>
+
+        <label>ID do Cliente: <input type="text" id="clienteId"></label><br>
+        <label>Nome: <input type="text" id="nome"></label><br>
+
+        <fieldset>
+            <legend>Endereço</legend>
+            <label>Rua: <input type="text" id="rua"></label><br>
+            <label>Número: <input type="number" id="numero"></label><br>
+            <label>Cidade: <input type="text" id="cidade"></label><br>
+            <label>Código Postal: <input type="text" id="codigoPostal"></label><br>
+        </fieldset>
+
+        <fieldset>
+            <legend>Consumo</legend>
+            <label>Mês: <input type="text" id="mes"></label><br>
+            <label>Ano: <input type="number" id="ano"></label><br>
+            <label>kWh Consumido: <input type="number" id="kWhConsumido"></label><br>
+            <label>Custo Total (€): <input type="number" step="0.01" id="custoTotal"></label><br>
+            <label>Data da Leitura: <input type="date" id="dataLeitura"></label><br>
+        </fieldset>
+
+        <fieldset>
+            <legend>Informações Adicionais</legend>
+            <label>Tipo de Tarifa: <input type="text" id="tipoTarifa"></label><br>
+            <label>Fornecedor: <input type="text" id="fornecedorEnergia"></label><br>
+            <label>Contrato Ativo:
+              <select id="contratoAtivo">
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </label>
+        </fieldset>
+
+        <button id="carregarDados">Carregar Dados do Cliente</button>
+          
+
+        <script src="index.js"></script>
+    </body>
+</html>
