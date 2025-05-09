@@ -1,3 +1,4 @@
+
 document.getElementById('carregarDados').addEventListener('click', () => {
     fetch('/cliente/12345')
       .then(res => res.json())
