@@ -24,25 +24,27 @@ router.get('/', (req, res) => {
 })
 
 router.post("/", async (req, res) => {
-    const value = req.body.valor;
-    const cod = req.body.cod;
-    const nomeDisciplina = req.body.nomeDisciplina;
-    const nomeProfessor = req.body.nomeProfessor;
-    if (value === undefined) {
-        return res.status(400).json({erro : "nao existe valor"})
-    } else {
-        minhas_notas.notas[req.params.index].nota = value;
-        const novaNota = new Notas({
-            nota: value,
-            cod: cod,
-            nomeDisciplina: nomeDisciplina,
-            nomeProfessor: nomeProfessor
-        });
-        await novaNota.save();
-        // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
+    if(req.body !== undefined) {
+        const { valor, cod, nomeDisciplina, nomeProfessor } = req.body;
+        if (value === undefined) {
+            return res.status(400).json({erro : "nao existe valor"})
+        } else {
+            minhas_notas.notas[req.params.index].nota = value;
+            const novaNota = new Notas({
+                nota: value,
+                cod: cod,
+                nomeDisciplina: nomeDisciplina,
+                nomeProfessor: nomeProfessor
+            });
+            await novaNota.save();
+            // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
 
-        return res.status(200).json({mnsg : "valor adicionado"});
-    }
+            return res.status(200).json({mnsg : "valor adicionado"});
+        }
+    }   else {
+        return res.status(400).json({erro : "nao existe valor"})
+    } 
+    
 })
 
 router.post("/atualizarNota/:index", async (req, res) =>{
@@ -106,6 +108,12 @@ router.delete("/", (req, res) =>{
     // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
     return res.status(200).json({mnsg : "valor deletado"});
 
+})
+
+router.use((req, res, next) =>{
+  const now = new Date(Date.now());
+  console.log("A request was made [ " + req.method + " ] Date : " + now.toLocaleString());
+  next();
 })
 
 module.exports = { router, setNotas};
