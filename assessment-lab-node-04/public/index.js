@@ -1,3 +1,11 @@
+const mongoose = require('mongoose')
+const NotasModel = require('../models/notas')
+
+const mongoURI = 'asd'
+mongoose.connect(mongoURI)
+  .then(()=> console.log('MongoDB conectado com sucesso'))
+  .catch(err => console.log('MongoDB erro: ', err))
+
 document.getElementById('carregarDados').addEventListener('click', () => {
     fetch('/cliente/12345')
       .then(res => res.json())
