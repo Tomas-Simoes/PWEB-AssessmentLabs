@@ -1,119 +1,192 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const mongoose = require("mongoose")
-var minhas_notas
+const mongoose = require("mongoose");
+const Notas = require('../models/notas');
 
-const NotasSchema = new mongoose.Schema({
-    nota: Number,
-    cod: Number,
-    nomeDisciplina: String,
-    nomeProfessor: String,
-});
-
-const Notas = mongoose.model('Notas', NotasSchema, 'notas'); 
-
+let minhas_notas = { notas: [] };
 
 function setNotas(novasNotas) {
-    minhas_notas = novasNotas;
+  minhas_notas = novasNotas;
 }
 
-router.get('/', (req, res) => {
-    console.log(minhas_notas)
-    res.send('Hello World wadawdawd!')
-})
-
-router.post("/", async (req, res) => {
-    if(req.body !== undefined) {
-        const { valor, cod, nomeDisciplina, nomeProfessor } = req.body;
-        if (value === undefined) {
-            return res.status(400).json({erro : "nao existe valor"})
-        } else {
-            minhas_notas.notas[req.params.index].nota = value;
-            const novaNota = new Notas({
-                nota: value,
-                cod: cod,
-                nomeDisciplina: nomeDisciplina,
-                nomeProfessor: nomeProfessor
-            });
-            await novaNota.save();
-            // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
-
-            return res.status(200).json({mnsg : "valor adicionado"});
-        }
-    }   else {
-        return res.status(400).json({erro : "nao existe valor"})
-    } 
-    
-})
-
-router.post("/atualizarNota/:index", async (req, res) =>{
-    const value = req.body.valor;
-    if(value === undefined) {
-        return res.status(400).json({erro : "nao existe valor"})
-    } else {
-        minhas_notas.notas[req.params.index].nota = value;
-        console.log(minhas_notas)
-        await Notas.findByIdAndUpdate(req.params.index, { nota: value });
-        // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
-        return res.status(200).json({mnsg : "valor adicionado"});
-    }
-})
-
-
-router.get("/notaByIndex/:index", async (req, res) => {
-    const data = await Notas.findById(id).exec();
-    console.log(`A nota no index ${req.params.index} é ${data}`);
-    res.send(`A nota no index ${req.params.index} é ${data}`);
-})
-
-router.patch("/atualizarNotaPatch/:index", async (req, res) => {
-    const value = req.body.valor;
-    const index = parseInt(req.params.index);
-
-    if(value === undefined) {
-        return res.status(400).json({erro : "nao existe valor"})
-    } else {
-        console.log(`Index recebido:`, index);
-        console.log(`Valor recebido:`, req.body.valor);
-        minhas_notas.notas[index].nota = value;
-        console.log("Notas:", minhas_notas);
-        await Notas.findByIdAndUpdate(req.params.index, { nota: value });
-
-
-        return res.status(200).json({mnsg : "valor adicionado"});
-    }
-})
-
-router.delete("/deletarNota/:index", async (req, res) => {
-    const index = parseInt(req.params.index);
-
-    if(index === undefined) {
-        return res.status(400).json({erro : "nao existe valor"})
-    } else {
-        console.log(`Index recebido:`, index);
-        minhas_notas.splice(index, 1);
-        console.log("Notas:", minhas_notas);
-        // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
-        await Produto.findByIdAndDelete(index);
-
-        return res.status(200).json({mnsg : "valor deletado"});
-    }
-})
-
-router.delete("/", (req, res) =>{
-    console.log("Notas Antes:", minhas_notas);
-    minhas_notas = {"notas": []}
-    console.log("Notas:", minhas_notas);
-    // fs.writeFileSync('./Shared/ficheiro_notas.json', JSON.stringify(minhas_notas, null, 2));
-    return res.status(200).json({mnsg : "valor deletado"});
-
-})
-
-router.use((req, res, next) =>{
+router.use((req, res, next) => {
   const now = new Date(Date.now());
   console.log("A request was made [ " + req.method + " ] Date : " + now.toLocaleString());
   next();
-})
+});
 
-module.exports = { router, setNotas};
+router.get('/', async (req, res) => {
+  try {
+    const allNotas = await Notas.find({});
+    console.log(minhas_notas);
+    res.status(200).json(allNotas);
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao buscar notas", detalhes: error.message });
+  }
+});
+
+router.post("/", async (req, res) => {
+  try {
+    if (req.body !== undefined) {
+      const { nota, codigoDisciplina, nomeDisciplina, nomeProfessor } = req.body;
+      
+      if (nota === undefined) {
+        return res.status(400).json({ erro: "nota não fornecida" });
+      } else {
+        const novaNota = new Notas({
+          nota: nota,
+          codigoDisciplina: codigoDisciplina,
+          nomeDisciplina: nomeDisciplina,
+          nomeProfessor: nomeProfessor
+        });
+        
+        const savedNota = await novaNota.save();
+        
+        // Update in-memory object
+        minhas_notas.notas.push({
+          nota: nota,
+          codigoDisciplina: codigoDisciplina,
+          nomeDisciplina: nomeDisciplina,
+          nomeProfessor: nomeProfessor
+        });
+        
+        return res.status(200).json({
+          msg: "valor adicionado",
+          nota: savedNota
+        });
+      }
+    } else {
+      return res.status(400).json({ erro: "corpo da requisição vazio" });
+    }
+  } catch (error) {
+    return res.status(500).json({ erro: "Erro ao salvar nota", detalhes: error.message });
+  }
+});
+
+// Update note by ID
+router.post("/:id", async (req, res) => {
+  try {
+    const { nota } = req.body;
+    
+    if (nota === undefined) {
+      return res.status(400).json({ erro: "nota não fornecida" });
+    } else {
+      const updatedNota = await Notas.findByIdAndUpdate(
+        req.params.id,
+        { nota: nota },
+        { new: true }
+      );
+      
+      if (!updatedNota) {
+        return res.status(404).json({ erro: "Nota não encontrada" });
+      }
+      
+      // Update in-memory note if found
+      const index = minhas_notas.notas.findIndex(nota => 
+        nota._id && nota._id.toString() === req.params.id
+      );
+      
+      if (index !== -1) {
+        minhas_notas.notas[index].nota = nota;
+      }
+      
+      console.log(minhas_notas);
+      return res.status(200).json({ msg: "valor atualizado", nota: updatedNota });
+    }
+  } catch (error) {
+    return res.status(500).json({ erro: "Erro ao atualizar nota", detalhes: error.message });
+  }
+});
+
+router.put("/notas/:id", async (req, res) => {
+  try {
+    const atualizacoes = req.body;
+
+    if (Object.keys(atualizacoes).length === 0) {
+      return res.status(400).json({ erro: "Nenhum dado para atualizar foi fornecido" });
+    }
+
+    const notaAtualizada = await Notas.findByIdAndUpdate(
+      req.params.id,
+      atualizacoes,
+      { new: true }
+    );
+
+    if (!notaAtualizada) {
+      return res.status(404).json({ erro: "Nota não encontrada" });
+    }
+
+    // Atualizar em minhas_notas (caso tenha sido carregado antes)
+    const index = minhas_notas.notas.findIndex(nota =>
+      nota._id && nota._id.toString() === req.params.id
+    );
+
+    if (index !== -1) {
+      minhas_notas.notas[index] = {
+        ...minhas_notas.notas[index],
+        ...atualizacoes
+      };
+    }
+
+    res.status(200).json({ msg: "Nota atualizada com sucesso", nota: notaAtualizada });
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao atualizar nota", detalhes: error.message });
+  }
+});
+
+// Get note by ID
+router.get("/notaById/:id", async (req, res) => {
+  try {
+    const data = await Notas.findById(req.params.id).exec();
+    
+    if (!data) {
+      return res.status(404).json({ erro: "Nota não encontrada" });
+    }
+    
+    console.log(`A nota com ID ${req.params.id} é ${data.nota}`);
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ erro: "Erro ao buscar nota", detalhes: error.message });
+  }
+});
+
+// Delete note by ID
+router.delete("/deletarNota/:id", async (req, res) => {
+  try {
+    const deletedNota = await Notas.findByIdAndDelete(req.params.id);
+    
+    if (!deletedNota) {
+      return res.status(404).json({ erro: "Nota não encontrada" });
+    }
+    
+    const index = minhas_notas.notas.findIndex(nota => 
+      nota._id && nota._id.toString() === req.params.id
+    );
+    
+    if (index !== -1) {
+      minhas_notas.notas.splice(index, 1);
+    }
+    
+    console.log("Notas:", minhas_notas);
+    return res.status(200).json({ msg: "valor deletado", nota: deletedNota });
+  } catch (error) {
+    return res.status(500).json({ erro: "Erro ao deletar nota", detalhes: error.message });
+  }
+});
+
+// Delete all notes
+router.delete("/", async (req, res) => {
+  try {
+    console.log("Notas Antes:", minhas_notas);
+    
+    await Notas.deleteMany({});
+    minhas_notas = { notas: [] };
+    
+    console.log("Notas Depois:", minhas_notas);
+    return res.status(200).json({ msg: "todas as notas foram deletadas" });
+  } catch (error) {
+    return res.status(500).json({ erro: "Erro ao deletar todas as notas", detalhes: error.message });
+  }
+});
+
+module.exports = { router, setNotas };
